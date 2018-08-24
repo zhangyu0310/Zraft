@@ -1,0 +1,10 @@
+
+*.vcxproj
+*.filters
+*.user
+*.sln
+*.opendb
+*.db
+.vs/Zraft/v15/.suo
+*.ipch
+Zraft/StateMachine/
