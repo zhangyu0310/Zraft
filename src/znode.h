@@ -9,6 +9,7 @@
 #ifndef ZRAFT_ZNODE_H
 #define ZRAFT_ZNODE_H
 
+#include <map>
 #include <memory>
 
 #include <bounce/buffer.h>
@@ -54,6 +55,7 @@ private:
     EventLoop loop_;
     TcpServer server_;
     Connector connector_;
+    //std::map<>
     // For storage
 
 };

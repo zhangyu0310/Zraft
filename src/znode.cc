@@ -33,3 +33,20 @@ zraft::Znode::Znode(const std::string& ip,
             &Znode::ErrorCallback,
             this, std::placeholders::_1));
 }
+
+void zraft::Znode::ConnectCallback(const TcpServer::TcpConnectionPtr& conn) {
+
+}
+
+void zraft::Znode::MessageCallback(const TcpServer::TcpConnectionPtr& conn,
+        Buffer* buffer, time_t time) {
+
+}
+
+void zraft::Znode::WriteCompCallback(const TcpServer::TcpConnectionPtr& conn) {
+
+}
+
+void zraft::Znode::ErrorCallback(const TcpServer::TcpConnectionPtr& conn) {
+
+}
