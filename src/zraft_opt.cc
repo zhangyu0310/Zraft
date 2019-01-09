@@ -1,15 +1,13 @@
 /*
-* Copyright (C) 2018 poppinzhang.
+* Copyright (C) 2019 poppinzhang.
 *
 * Written by poppinzhang with C++11 <poppinzhang@tencent.com>
 *
 * Distributed under the MIT License (http://opensource.org/licenses/MIT)
 */
 
-#include <zraft.h>
+#include <zraft_opt.h>
 
-zraft::Zraft::Zraft(const zraft::ZraftOpt& opt) : options_(opt) { }
-
-int zraft::Zraft::init() {
+void zraft::ZraftOpt::setMember(const std::string &ip_port) {
 
 }

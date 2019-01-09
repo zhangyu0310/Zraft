@@ -11,6 +11,7 @@
 
 #include <memory>
 
+#include <zraft_opt.h>
 #include <znode.h>
 
 
@@ -18,8 +19,13 @@ namespace zraft {
 
 class Zraft {
 public:
+    explicit Zraft(const ZraftOpt& opt);
+    ~Zraft() = default;
+
+    int init();
 
 private:
+    ZraftOpt options_;
     std::unique_ptr<Znode> node_;
 };
 

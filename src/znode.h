@@ -9,8 +9,9 @@
 #ifndef ZRAFT_ZNODE_H
 #define ZRAFT_ZNODE_H
 
-#include <map>
+#include <chrono>
 #include <memory>
+#include <set>
 
 #include <bounce/buffer.h>
 #include <bounce/connector.h>
@@ -45,6 +46,7 @@ private:
     void ErrorCallback(const TcpServer::TcpConnectionPtr& conn);
 
     // Public info
+    time_t start_time_;
     uint64_t current_term_;
     int16_t voted_for_;
     uint64_t commit_index_;
@@ -55,7 +57,7 @@ private:
     EventLoop loop_;
     TcpServer server_;
     Connector connector_;
-    //std::map<>
+    std::set<TcpServer::TcpConnectionPtr> connections_;
     // For storage
 
 };
