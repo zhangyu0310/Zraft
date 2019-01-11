@@ -11,5 +11,9 @@
 zraft::Zraft::Zraft(const zraft::ZraftOpt& opt) : options_(opt) { }
 
 int zraft::Zraft::init() {
-
+    node_.reset(new Znode(options_.local_ip_,
+            options_.port_,
+            options_.thread_num_));
+    for (auto& it : options_.ip_list_) {
+    }
 }

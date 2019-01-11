@@ -32,8 +32,8 @@ namespace zraft {
 
 class Znode {
 public:
-    Znode(const std::string& ip,
-          uint16_t port,
+    Znode(const std::string& local_ip,
+          uint16_t local_port,
           uint32_t thread_num = 0);
     ~Znode() = default;
 

@@ -8,14 +8,14 @@
 
 #include <znode.h>
 
-zraft::Znode::Znode(const std::string& ip,
-                    uint16_t port,
+zraft::Znode::Znode(const std::string& local_ip,
+                    uint16_t local_port,
                     uint32_t thread_num) :
     current_term_(0),
     voted_for_(-1),
     commit_index_(0),
     last_applied_(0),
-    server_(&loop_, ip, port, thread_num),
+    server_(&loop_, local_ip, local_port, thread_num),
     connector_(&loop_, &server_) {
     start_time_ = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::system_clock::now().time_since_epoch()).count();
@@ -34,9 +34,6 @@ zraft::Znode::Znode(const std::string& ip,
     server_.setErrorCallback(std::bind(
             &Znode::ErrorCallback,
             this, std::placeholders::_1));
-    // demo
-    connector_.connect(bounce::SockAddress("127.0.0.1", 8888));
-    connector_.connect(bounce::SockAddress("127.0.0.1", 9999));
 }
 
 void zraft::Znode::ConnectCallback(const TcpServer::TcpConnectionPtr& conn) {
