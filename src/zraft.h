@@ -22,7 +22,7 @@ public:
     explicit Zraft(const ZraftOpt& opt);
     ~Zraft() = default;
 
-    int init();
+    void init();
 
 private:
     ZraftOpt options_;

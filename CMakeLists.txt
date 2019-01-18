@@ -6,6 +6,7 @@ set(CMAKE_CXX_FLAGS "-O0 -Wall")
 
 add_subdirectory(src)
 add_subdirectory(src/test)
+add_subdirectory(dep/bounce)
 
 
 #add_library(zraft ${ZRAFT_SRC})

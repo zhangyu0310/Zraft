@@ -15,18 +15,6 @@ class Zrole {
 
 };
 
-class Master : Zrole {
-
-};
-
-class Servant : Zrole {
-
-};
-
-class Candidate : Zrole {
-
-};
-
 } // namespace zraft
 
 #endif //ZRAFT_ZROLE_H

@@ -20,22 +20,24 @@
 #include <bounce/tcp_server.h>
 #include <bounce/tcp_connection.h>
 
+#include <network.h>
+#include <zraft_opt.h>
 #include <zrole.h>
 
-using bounce::Buffer;
-using bounce::Connector;
-using bounce::EventLoop;
-using bounce::TcpServer;
-using bounce::TcpConnection;
+using Buffer = bounce::Buffer;
+using Connector = bounce::Connector;
+using EventLoop = bounce::EventLoop;
+using TcpServer= bounce::TcpServer;
+using TcpConnection = bounce::TcpConnection;
 
 namespace zraft {
 
 class Znode {
 public:
-    Znode(const std::string& local_ip,
-          uint16_t local_port,
-          uint32_t thread_num = 0);
+    explicit Znode(const ZraftOpt& opt);
     ~Znode() = default;
+
+    void connectOther(const std::string& ip, uint16_t port);
 
 private:
     void ConnectCallback(const TcpServer::TcpConnectionPtr& conn);
@@ -44,9 +46,11 @@ private:
             Buffer* buffer, time_t time);
     void WriteCompCallback(const TcpServer::TcpConnectionPtr& conn);
     void ErrorCallback(const TcpServer::TcpConnectionPtr& conn);
+    void ConnectErrorCallback(bounce::SockAddress addr, int err);
 
     // Public info
     time_t start_time_;
+    std::chrono::milliseconds hb_duration_;
     uint64_t current_term_;
     int16_t voted_for_;
     uint64_t commit_index_;

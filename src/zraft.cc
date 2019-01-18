@@ -10,10 +10,11 @@
 
 zraft::Zraft::Zraft(const zraft::ZraftOpt& opt) : options_(opt) { }
 
-int zraft::Zraft::init() {
-    node_.reset(new Znode(options_.local_ip_,
-            options_.port_,
-            options_.thread_num_));
+void zraft::Zraft::init() {
+    node_.reset(new Znode(options_));
     for (auto& it : options_.ip_list_) {
+        auto pos = it.rfind(':');
+        node_->connectOther(it.substr(0, pos),
+                static_cast<uint16_t>(std::stoi(it.substr(pos + 1))));
     }
 }

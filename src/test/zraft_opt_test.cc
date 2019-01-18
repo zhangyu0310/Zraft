@@ -11,6 +11,8 @@ TEST(ZraftOpt, init)
     zraft::ZraftOpt opt("127.0.0.1:9999,1.7.5.3:1,0.0.0.0:10");
     for (auto& it : opt.ip_list_) {
         std::cout << "[----------] " << it << std::endl;
+        std::cout << it.substr(0, it.rfind(':')) << std::endl;
+        std::cout << it.substr(it.rfind(':') + 1) << std::endl;
     }
     EXPECT_STREQ(opt.local_ip_.c_str(), "127.0.0.1");
     EXPECT_EQ(opt.port_, 9281);

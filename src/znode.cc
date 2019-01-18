@@ -8,17 +8,24 @@
 
 #include <znode.h>
 
-zraft::Znode::Znode(const std::string& local_ip,
-                    uint16_t local_port,
-                    uint32_t thread_num) :
-    current_term_(0),
-    voted_for_(-1),
-    commit_index_(0),
-    last_applied_(0),
-    server_(&loop_, local_ip, local_port, thread_num),
-    connector_(&loop_, &server_) {
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
+zraft::Znode::Znode(const zraft::ZraftOpt& opt) :
+        current_term_(0),
+        voted_for_(-1),
+        commit_index_(0),
+        last_applied_(0),
+        server_(&loop_, opt.local_ip_, opt.port_, opt.thread_num_),
+        connector_(&loop_, &server_) {
     start_time_ = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::system_clock::now().time_since_epoch()).count();
+    if (opt.heart_beat_ < 100) {
+        hb_duration_ = std::chrono::milliseconds(100);
+    } else {
+        hb_duration_ = std::chrono::milliseconds(opt.heart_beat_);
+    }
     server_.setConnectionCallback(std::bind(
             &Znode::ConnectCallback,
             this, std::placeholders::_1));
@@ -30,10 +37,21 @@ zraft::Znode::Znode(const std::string& local_ip,
             std::placeholders::_3));
     server_.setWriteCompleteCallback(std::bind(
             &Znode::WriteCompCallback,
-            this, std::placeholders::_1));
+            this,
+            std::placeholders::_1));
     server_.setErrorCallback(std::bind(
             &Znode::ErrorCallback,
-            this, std::placeholders::_1));
+            this,
+            std::placeholders::_1));
+    connector_.setErrorCallback(std::bind(
+            &Znode::ConnectErrorCallback,
+            this,
+            std::placeholders::_1,
+            std::placeholders::_2));
+}
+
+void zraft::Znode::connectOther(const std::string& ip, uint16_t port) {
+    connector_.connect(bounce::SockAddress(ip, port));
 }
 
 void zraft::Znode::ConnectCallback(const TcpServer::TcpConnectionPtr& conn) {
@@ -56,5 +74,9 @@ void zraft::Znode::WriteCompCallback(const TcpServer::TcpConnectionPtr& conn) {
 }
 
 void zraft::Znode::ErrorCallback(const TcpServer::TcpConnectionPtr& conn) {
+
+}
+
+void zraft::Znode::ConnectErrorCallback(bounce::SockAddress addr, int err) {
 
 }

@@ -13,11 +13,13 @@ zraft::ZraftOpt::ZraftOpt(
         const std::string &local_ip,
         uint16_t local_port,
         uint16_t thread_num,
+        int64_t heart_beat,
         const std::string &log_path,
         const std::string &db_path) :
         local_ip_(local_ip),
         port_(local_port),
         thread_num_(thread_num),
+        heart_beat_(heart_beat),
         log_path_(log_path),
         db_path_(db_path) {
     std::string::size_type begin = 0;
@@ -29,6 +31,7 @@ zraft::ZraftOpt::ZraftOpt(
     }
     ip_list_.push_back(ip_list.substr(begin));
 }
+
 void zraft::ZraftOpt::setMember(const std::string &ip_port) {
     std::string::size_type begin = 0;
     std::string::size_type end = ip_port.find(',', begin);
