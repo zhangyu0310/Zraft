@@ -23,6 +23,9 @@
 #include <network.h>
 #include <zraft_opt.h>
 #include <zrole.h>
+#include <rpc.h>
+#include <rpc_server.h>
+#include <zraft_rpc.h>
 
 using Buffer = bounce::Buffer;
 using Connector = bounce::Connector;
@@ -37,16 +40,13 @@ public:
     explicit Znode(const ZraftOpt& opt);
     ~Znode() = default;
 
-    void connectOther(const std::string& ip, uint16_t port);
+    void connectOther(const std::string& ip,uint16_t port);
+    void start();
 
 private:
-    void ConnectCallback(const TcpServer::TcpConnectionPtr& conn);
-    void MessageCallback(
-            const TcpServer::TcpConnectionPtr& conn,
-            Buffer* buffer, time_t time);
-    void WriteCompCallback(const TcpServer::TcpConnectionPtr& conn);
-    void ErrorCallback(const TcpServer::TcpConnectionPtr& conn);
-    void ConnectErrorCallback(bounce::SockAddress addr, int err);
+    void election();
+    void RpcConnectCallback(const std::string& conn_id);
+    void RpcDisConnectCallback(const std::string& conn_id);
 
     // Public info
     time_t start_time_;
@@ -58,10 +58,8 @@ private:
     // For raft role
     std::unique_ptr<Zrole> role_;
     // For network
-    EventLoop loop_;
-    TcpServer server_;
-    Connector connector_;
-    std::set<TcpServer::TcpConnectionPtr> connections_;
+    RpcServer rpc_server_;
+    std::set<std::string> conn_ids_;
     // For storage
 
 };

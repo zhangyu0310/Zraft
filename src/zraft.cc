@@ -18,3 +18,7 @@ void zraft::Zraft::init() {
                 static_cast<uint16_t>(std::stoi(it.substr(pos + 1))));
     }
 }
+
+void zraft::Zraft::start() {
+    node_->start(); // election and heartbeats
+}

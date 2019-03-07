@@ -23,6 +23,7 @@ public:
     ~Zraft() = default;
 
     void init();
+    void start();
 
 private:
     ZraftOpt options_;

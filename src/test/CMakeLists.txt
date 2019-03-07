@@ -17,3 +17,17 @@ target_link_libraries(json_parse_test pthread)
 target_link_libraries(json_parse_test gtest)
 target_link_libraries(json_parse_test pthread)
 target_link_libraries(json_parse_test bounce)
+
+add_executable(rpc_test_ser
+        rpc_test_ser.cc
+        ../rpc/rpc_server.cc
+        ../rpc/rpc.cc)
+target_link_libraries(rpc_test_ser pthread)
+target_link_libraries(rpc_test_ser bounce)
+
+add_executable(rpc_test_cli
+        rpc_test_cli.cc
+        ../rpc/rpc_server.cc
+        ../rpc/rpc.cc)
+target_link_libraries(rpc_test_cli pthread)
+target_link_libraries(rpc_test_cli bounce)
