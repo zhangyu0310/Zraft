@@ -11,38 +11,60 @@
 
 #include <rpc.h>
 
-namespace Zraft {
+namespace ZraftRpc {
+
+namespace WhoAreYou {
+
+struct Arguments {
+    uint32_t my_id;
+    std::string my_ip;
+    uint16_t my_port;
+    time_t my_start_time;
+    int my_pid;
+};
+void to_json(json& j, const Arguments& arg);
+void from_json(const json& j, Arguments& arg);
+
+struct Results {
+    uint32_t my_id;
+    std::string my_ip;
+    uint16_t my_port;
+    time_t my_start_time;
+    int my_pid;
+};
+void to_json(json& j, const Results& res);
+void from_json(const json& j, Results& res);
+
+} // namespace WhoAreYou
+
 namespace RequestVote {
 
-    struct Arguments {
-        uint64_t term;
-        uint64_t candidateId;
-        uint64_t lastLogIndex;
-        uint64_t lastLogTerm;
-    };
+struct Arguments {
+    uint64_t term;
+    uint64_t candidateId;
+    uint64_t lastLogIndex;
+    uint64_t lastLogTerm;
+};
 
-    struct Results {
+struct Results {
 
-    };
-
-    Rpc RequestVote("request_vote", );
+};
 
 } // namespace RequestVote
 
 namespace AppendEntries {
-    struct Arguments {
-        uint64_t term;
-        uint32_t leaderId;
-        uint64_t prevLogTerm;
-        uint64_t leaderCommit;
-        //key-value pair entries[];
-    };
 
-    struct Results {
+struct Arguments {
+    uint64_t term;
+    uint32_t leaderId;
+    uint64_t prevLogTerm;
+    uint64_t leaderCommit;
+    //key-value pair entries[];
+};
 
-    };
+struct Results {
 
-    Rpc AppendEntries("",);
+};
 
 } // namespace AppendEntries
 } // namespace Zraft

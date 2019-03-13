@@ -10,7 +10,6 @@ Call:
   "rpc_name":"",
   "rpc_type":0,
   "rpc_id":"hello@127.0.0.1_9281_1111@2222",
-  "rpc_argc":2,
   "rpc_args": {
     "arg1":"arg",
     "arg2":"arg"
@@ -22,7 +21,6 @@ Return:
   "rpc_name":"",
   "rpc_type":1,
   "rpc_id":"hello@127.0.0.1_9281_1111@2222",
-  "rpc_argc":2,
   "rpc_args": {
     "arg1":"arg",
     "arg2":"arg"

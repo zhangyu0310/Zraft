@@ -11,7 +11,8 @@
 
 #include <chrono>
 #include <memory>
-#include <set>
+#include <mutex>
+#include <map>
 
 #include <bounce/buffer.h>
 #include <bounce/connector.h>
@@ -27,15 +28,26 @@
 #include <rpc_server.h>
 #include <zraft_rpc.h>
 
-using Buffer = bounce::Buffer;
-using Connector = bounce::Connector;
-using EventLoop = bounce::EventLoop;
-using TcpServer= bounce::TcpServer;
-using TcpConnection = bounce::TcpConnection;
-
 namespace zraft {
 
+struct connect_info {
+    using ConnectionID = RpcServer::ConnectionID;
+public:
+    explicit connect_info() :
+        id_(0),
+        port_(0),
+        start_time_(0),
+        pid_(0) { }
+
+    uint32_t id_;
+    std::string ip_;
+    uint16_t port_;
+    time_t start_time_;
+    int pid_;
+};
+
 class Znode {
+    using ConnectionID = RpcServer::ConnectionID;
 public:
     explicit Znode(const ZraftOpt& opt);
     ~Znode() = default;
@@ -44,11 +56,20 @@ public:
     void start();
 
 private:
+    void RpcConnectCallback(ConnectionID conn_id);
+    void RpcDisConnectCallback(ConnectionID conn_id);
     void election();
-    void RpcConnectCallback(const std::string& conn_id);
-    void RpcDisConnectCallback(const std::string& conn_id);
-
+    bool connectionPortIsLocalPort(ConnectionID conn_id) {
+        return rpc_server_.getConnectionLocalPort(conn_id) == local_port_;
+    }
+    bool updateConnectIDs(zraft::connect_info::ConnectionID conn_id,
+                          const ZraftRpc::WhoAreYou::Results& res);
+    void shutdownAndReconnect(zraft::connect_info::ConnectionID conn_id,
+                              const ZraftRpc::WhoAreYou::Results& res);
     // Public info
+    uint32_t id_;
+    std::string local_ip_;
+    uint16_t local_port_;
     time_t start_time_;
     std::chrono::milliseconds hb_duration_;
     uint64_t current_term_;
@@ -59,9 +80,17 @@ private:
     std::unique_ptr<Zrole> role_;
     // For network
     RpcServer rpc_server_;
-    std::set<std::string> conn_ids_;
+    std::mutex conn_ids_mutex_;
+    std::map<ConnectionID, connect_info> conn_ids_;
     // For storage
 
+private:
+    // RPC Callback Functions.
+    // RPC: WhoAreYou
+    Rpc WhoAreYou;
+    void WAYCliSend(ConnectionID conn_id, const json& argv, any* context);
+    void WAYCliRecv(ConnectionID conn_id, const json& argv, any* context);
+    void WAYSerRecv(ConnectionID conn_id, const json& argv, json* send_argv);
 };
 
 } // namespace zraft

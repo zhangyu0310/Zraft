@@ -31,3 +31,10 @@ add_executable(rpc_test_cli
         ../rpc/rpc.cc)
 target_link_libraries(rpc_test_cli pthread)
 target_link_libraries(rpc_test_cli bounce)
+
+add_executable(zraft_connections_test
+        zraft_connections_test.cc)
+target_link_libraries(zraft_connections_test pthread)
+target_link_libraries(zraft_connections_test bounce)
+target_link_libraries(zraft_connections_test zraft)
+target_link_libraries(zraft_connections_test bounce)

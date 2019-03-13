@@ -13,15 +13,17 @@
 #include <any/any.hpp>
 #include <rpc_args.h>
 
-std::set<std::string> conn_id_set;
+using ConnectionID = RpcServer::ConnectionID;
+
+std::set<ConnectionID> conn_id_set;
 std::mutex m;
 std::condition_variable cv;
 
-void ser_send_cb(const std::string& name, const json& argv, any* context);
-void ser_recv_cb(const std::string& name, const json& argv, any* context);
-void cli_recv_cb(const std::string& name, const json& argv, json* send_argv);
-void connect_cb(const std::string& conn_id);
-void disconnect_cb(const std::string& conn_id);
+void ser_send_cb(ConnectionID conn_id, const json& argv, any* context);
+void ser_recv_cb(ConnectionID conn_id, const json& argv, any* context);
+void cli_recv_cb(ConnectionID conn_id, const json& argv, json* send_argv);
+void connect_cb(ConnectionID conn_id);
+void disconnect_cb(ConnectionID conn_id);
 
 int main(int argc, char* argv[]) {
     // argv[0] = ./rpc_test
@@ -38,7 +40,7 @@ int main(int argc, char* argv[]) {
             &ser_recv_cb,
             &cli_recv_cb);
     rpc_server.start();
-    while (1) {
+    while (true) {
         {
             std::unique_lock<std::mutex> lk(m);
             cv.wait(lk, [] { return !conn_id_set.empty(); });
@@ -50,14 +52,14 @@ int main(int argc, char* argv[]) {
     }
 }
 
-void ser_send_cb(const std::string& name, const json& argv, any* context) {
+void ser_send_cb(ConnectionID conn_id, const json& argv, any* context) {
     auto hello = argv.get<rpc::Hello>();
     std::cout << "Server Send id: " << hello.id << " Mes: " << hello.str << std::endl;
     any test(std::string("This is a test"));
     context->swap(test);
 }
 
-void ser_recv_cb(const std::string& name, const json& argv, any* context) {
+void ser_recv_cb(ConnectionID conn_id, const json& argv, any* context) {
     auto hello = argv.get<rpc::HelloRes>();
     std::cout << "Mes: " << hello.str << std::endl;
     any ct;
@@ -65,21 +67,21 @@ void ser_recv_cb(const std::string& name, const json& argv, any* context) {
     std::cout << linb::any_cast<std::string>(ct) << std::endl;
 }
 
-void cli_recv_cb(const std::string& name, const json& argv, json* send_argv) {
+void cli_recv_cb(ConnectionID conn_id, const json& argv, json* send_argv) {
     rpc::Hello hello = argv.get<rpc::Hello>();
     std::cout << "Client Recv id: " << hello.id << " Mes: " << hello.str << std::endl;
     rpc::HelloRes res{"Fuck You"};
     (*send_argv) = res;
 }
 
-void connect_cb(const std::string& conn_id) {
+void connect_cb(ConnectionID conn_id) {
     std::lock_guard<std::mutex> lk(m);
     std::cout << "Connected... conn_id: " << conn_id << std::endl;
     conn_id_set.insert(conn_id);
     cv.notify_one();
 }
 
-void disconnect_cb(const std::string& conn_id) {
+void disconnect_cb(ConnectionID conn_id) {
     std::cout << "DisConnected... conn_id: " << conn_id << std::endl;
     conn_id_set.erase(conn_id);
 }

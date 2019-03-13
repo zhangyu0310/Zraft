@@ -9,6 +9,8 @@
 #ifndef ZRAFT_NETWORK_H
 #define ZRAFT_NETWORK_H
 
+#include <chrono>
+
 #include <bounce/buffer.h>
 #include <nlohmann/json.hpp>
 
@@ -17,9 +19,13 @@ using Buffer = bounce::Buffer;
 
 namespace zraft {
 
-namespace network{
+namespace network {
 
 bool jsonParse(Buffer* buffer, json* json);
+
+time_t getNowTime();
+
+std::string getNowTime2String();
 
 } // namespace network
 

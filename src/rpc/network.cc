@@ -39,3 +39,11 @@ bool zraft::network::jsonParse(Buffer* buffer, json* json) {
     }
     return false;
 }
+
+time_t getNowTime() {
+    return std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+}
+
+std::string getNowTime2String() {
+    return std::to_string(getNowTime());
+}
