@@ -44,44 +44,52 @@ int main(int argc, char* argv[]) {
         {
             std::unique_lock<std::mutex> lk(m);
             cv.wait(lk, [] { return !conn_id_set.empty(); });
+            for (auto &it : conn_id_set) {
+                rpc_server.callRpc(it, "hello", {{"id",  10},
+                                                 {"str", "haha"}});
+            }
         }
-        for (auto &it : conn_id_set) {
-            rpc_server.callRpc(it, "hello", {{"id", 10}, {"str", "haha"}});
-        }
-        sleep(1);
+        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
 void ser_send_cb(ConnectionID conn_id, const json& argv, any* context) {
     auto hello = argv.get<rpc::Hello>();
-    std::cout << "Server Send id: " << hello.id << " Mes: " << hello.str << std::endl;
-    any test(std::string("This is a test"));
+    //std::cout << "Server Send id: " << hello.id << " Mes: " << hello.str << std::endl;
+    any test(std::string("This is a test")
+        + std::to_string(std::chrono::system_clock::now().time_since_epoch().count()));
     context->swap(test);
 }
 
 void ser_recv_cb(ConnectionID conn_id, const json& argv, any* context) {
     auto hello = argv.get<rpc::HelloRes>();
-    std::cout << "Mes: " << hello.str << std::endl;
+    //std::cout << "Mes: " << hello.str << std::endl;
     any ct;
     ct.swap(*context);
-    std::cout << linb::any_cast<std::string>(ct) << std::endl;
+    //std::cout << linb::any_cast<std::string>(ct) << std::endl;
 }
 
 void cli_recv_cb(ConnectionID conn_id, const json& argv, json* send_argv) {
     rpc::Hello hello = argv.get<rpc::Hello>();
-    std::cout << "Client Recv id: " << hello.id << " Mes: " << hello.str << std::endl;
+    //std::cout << "Client Recv id: " << hello.id << " Mes: " << hello.str << std::endl;
     rpc::HelloRes res{"Fuck You"};
     (*send_argv) = res;
 }
 
 void connect_cb(ConnectionID conn_id) {
-    std::lock_guard<std::mutex> lk(m);
     std::cout << "Connected... conn_id: " << conn_id << std::endl;
-    conn_id_set.insert(conn_id);
+    {
+        std::lock_guard<std::mutex> lk(m);
+        conn_id_set.insert(conn_id);
+    }
     cv.notify_one();
 }
 
 void disconnect_cb(ConnectionID conn_id) {
     std::cout << "DisConnected... conn_id: " << conn_id << std::endl;
-    conn_id_set.erase(conn_id);
+    {
+        std::lock_guard<std::mutex> lk(m);
+        conn_id_set.erase(conn_id);
+    }
+    cv.notify_one();
 }

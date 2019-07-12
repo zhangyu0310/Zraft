@@ -45,10 +45,15 @@ struct Arguments {
     uint64_t lastLogIndex;
     uint64_t lastLogTerm;
 };
+void to_json(json& j, const Arguments& arg);
+void from_json(const json& j, Arguments& arg);
 
 struct Results {
-
+    uint64_t term;
+    bool voteGranted;
 };
+void to_json(json& j, const Results& res);
+void from_json(const json& j, Results& res);
 
 } // namespace RequestVote
 
@@ -61,10 +66,14 @@ struct Arguments {
     uint64_t leaderCommit;
     //key-value pair entries[];
 };
+void to_json(json& j, const Arguments& arg);
+void from_json(const json& j, Arguments& arg);
 
 struct Results {
 
 };
+void to_json(json& j, const Results& res);
+void from_json(const json& j, Results& res);
 
 } // namespace AppendEntries
 } // namespace Zraft

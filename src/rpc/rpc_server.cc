@@ -18,7 +18,11 @@ RpcServer::RpcServer(const std::string& ip,
             g_conn_id_(0),
             loop_(),
             server_(&loop_, ip, port, thread_num),
-            connector_(&loop_, &server_) {
+            connector_(&loop_, &server_),
+            logger_(spdlog::basic_logger_mt<spdlog::async_factory>("rpc_log", "./rpc_log")){
+    bounce::Logger::setBounceLogPath(".");
+    bounce::Logger::get("bounce_file_log")->set_level(spdlog::level::debug);
+    bounce::Logger::get("bounce_file_log")->flush_on(spdlog::level::err);
     server_.setConnectionCallback(std::bind(
             &RpcServer::connectCallback,
             this, std::placeholders::_1));
@@ -42,6 +46,12 @@ RpcServer::RpcServer(const std::string& ip,
             std::placeholders::_1,
             std::placeholders::_2));
     server_.start();
+    logger_->info("Thread number is {}", thread_num);
+    logger_->info("Rpc Server started.");
+    logger_->flush();
+    // FIXME: For Debug
+    logger_->set_level(spdlog::level::err);
+    logger_->flush_on(spdlog::level::err);
 }
 
 void RpcServer::start() {
@@ -51,6 +61,7 @@ void RpcServer::start() {
 void RpcServer::connectOther(const std::string &ip, uint16_t port) {
     bounce::SockAddress addr(ip, port);
     connector_.connect(addr);
+    logger_->debug("connect other actively, peer {}:{}", ip, port);
 }
 
 void RpcServer::registerRpc(
@@ -65,7 +76,7 @@ void RpcServer::registerRpc(
 void RpcServer::addRpc(
         const std::string& rpc_name,
         const Rpc& rpc) {
-    if (rpc_map_.end() != rpc_map_.find(rpc_name)) {
+    if (rpc_map_.end() == rpc_map_.find(rpc_name)) {
         rpc_map_.insert(std::make_pair(rpc_name, rpc));
     }
 }
@@ -74,15 +85,24 @@ void RpcServer::callRpc(
         ConnectionID conn_id,
         const std::string& rpc_name,
         const json& args) {
+    logger_->debug("Call RPC: {}", rpc_name);
     auto call_it = rpc_map_.find(rpc_name);
     if (call_it != rpc_map_.end()) {
         auto it = connections_.find(conn_id);
         if (it == connections_.end()) {
-            // TODO: print Error.
-            error_cb_();
+            logger_->error("file:{}, line:{}, function:{} "
+                           "Can't find conn_id, call RPC failed.",
+                           FILENAME(__FILE__), __LINE__, __FUNCTION__);
+            if (error_cb_)
+                error_cb_();
         } else {
             json rpc_json = makeRpcJson(rpc_name, Rpc::require, conn_id, args);
-            it->second->send(rpc_json.dump());
+            auto& conn = it->second;
+            conn->send(rpc_json.dump());
+            logger_->debug("RPC Server: {}:{}",
+                    conn->peer_addr().ip(),
+                    conn->peer_addr().port());
+            logger_->debug("send mes: {}", rpc_json.dump());
             auto func = call_it->second.cli_send_cb();
             if (func) {
                 any context;
@@ -95,7 +115,9 @@ void RpcServer::callRpc(
             }
         }
     } else {
-        // TODO: Print Log.
+        logger_->error("file:{}, line:{}, function:{} "
+                       "Can't find RPC {}, name mistake or not be registered.",
+                       FILENAME(__FILE__), __LINE__, __FUNCTION__, rpc_name);
     }
 }
 
@@ -116,8 +138,6 @@ void RpcServer::connectCallback(
             connections_.erase(conn_id);
         }
         disconn_cb_(conn_id);
-    } else {
-        // TODO: print Error into log.
     }
 }
 
@@ -127,13 +147,17 @@ void RpcServer::messageCallback(
         time_t time) {
     json mes;
     if (!jsonParse(buffer, &mes)) { //parse failed
-        // TODO:Log error.
+        logger_->error("file:{}, line:{}, function:{} "
+                       "Json Parse failed.",
+                       FILENAME(__FILE__), __LINE__, __FUNCTION__);
         return;
     }
     std::string rpc_name(mes["rpc_name"].get<std::string>());
     auto rpc_it = rpc_map_.find(rpc_name);
     if (rpc_it == rpc_map_.end()) {
-        // TODO:print Error to log.
+        logger_->error("file:{}, line:{}, function:{} "
+                       "Can't find RPC {}, name mistake or not be registered.",
+                       FILENAME(__FILE__), __LINE__, __FUNCTION__, rpc_name);
         return;
     }
     auto rpc = rpc_it->second;
@@ -143,8 +167,9 @@ void RpcServer::messageCallback(
     if (type == Rpc::require) {
         auto func = rpc.ser_recv_cb();
         json respond_argv;
-        // this function must existence.
-        func(conn_id, argv, &respond_argv);
+        if (func) {
+            func(conn_id, argv, &respond_argv);
+        }
         json respond = mes;
         respond["rpc_type"] = Rpc::respond;
         respond["rpc_args"] = respond_argv;
@@ -161,22 +186,23 @@ void RpcServer::messageCallback(
                 context_map_.erase(context_it);
             }
         }
-        // this function must existence.
-        func(conn_id, argv, &context);
+        if (func) {
+            func(conn_id, argv, &context);
+        }
     } else {
-        // TODO:print Error to log.
+        logger_->error("file:{}, line:{}, function:{} "
+                       "Bad RPC type {}, WTF!",
+                       FILENAME(__FILE__), __LINE__, __FUNCTION__, type);
     }
 }
 
 void RpcServer::connectErrorCallback(bounce::SockAddress addr, int err) {
-    // TODO: print Error into log.
     if (error_cb_) {
         error_cb_();
     }
 }
 
 void RpcServer::errorCallback(const TcpServer::TcpConnectionPtr &conn) {
-    // TODO: print Error into log.
     if (error_cb_) {
         error_cb_();
     }
@@ -185,6 +211,8 @@ void RpcServer::errorCallback(const TcpServer::TcpConnectionPtr &conn) {
 void RpcServer::writeCompCallback(
         const TcpServer::TcpConnectionPtr &conn) {
     // TODO: print Message to log.
+    auto conn_id = linb::any_cast<ConnectionID>(conn->getContext());
+    logger_->info("ConnectID: {}, write completed.", conn_id);
 }
 
 // FIXME: If json key or value has { } the function is error.
@@ -192,7 +220,8 @@ bool RpcServer::jsonParse(Buffer* buffer, json* json) {
     auto ptr = buffer->peek();
     int barckets = 0;
     if (ptr[0] != '{') {
-        // TODO: Error Message
+        logger_->error("jsonParse failed. The first letter is not '{'"
+                       "Buffer dump: {}", buffer->peek());
         return false;
     } else {
         ++barckets;
@@ -210,7 +239,8 @@ bool RpcServer::jsonParse(Buffer* buffer, json* json) {
         try {
             *json = json::parse(buf);
         } catch (json::parse_error& e) {
-            // TODO: Error Message
+            logger_->error("jsonParse failed. Throw parse error"
+                           "Buffer dump: {}", buf);
             return false;
         }
         buffer->retrieve(i);
@@ -219,8 +249,8 @@ bool RpcServer::jsonParse(Buffer* buffer, json* json) {
     return false;
 }
 
-time_t RpcServer::getNowTime() {
-    return system_clock::to_time_t(system_clock::now());
+int64_t RpcServer::getNowTime() {
+    return system_clock::now().time_since_epoch().count();
 }
 
 std::string RpcServer::getNowTime2String() {

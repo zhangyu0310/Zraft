@@ -46,22 +46,22 @@ int main(int argc, char* argv[]) {
 
 void ser_send_cb(ConnectionID conn_id, const json& argv, any* context) {
     auto hello = argv.get<rpc::Hello>();
-    std::cout << "Server Send id: " << hello.id << " Mes: " << hello.str << std::endl;
+    //std::cout << "Server Send id: " << hello.id << " Mes: " << hello.str << std::endl;
     any test(std::string("This is a test"));
     context->swap(test);
 }
 
 void ser_recv_cb(ConnectionID conn_id, const json& argv, any* context) {
     auto hello = argv.get<rpc::HelloRes>();
-    std::cout << "Mes: " << hello.str << std::endl;
+    //std::cout << "Mes: " << hello.str << std::endl;
     any ct;
     ct.swap(*context);
-    std::cout << linb::any_cast<std::string>(ct) << std::endl;
+    //std::cout << linb::any_cast<std::string>(ct) << std::endl;
 }
 
 void cli_recv_cb(ConnectionID conn_id, const json& argv, json* send_argv) {
     rpc::Hello hello = argv.get<rpc::Hello>();
-    std::cout << "Client Recv id: " << hello.id << " Mes: " << hello.str << std::endl;
+    //std::cout << "Client Recv id: " << hello.id << " Mes: " << hello.str << std::endl;
     rpc::HelloRes res{"Fuck You"};
     (*send_argv) = res;
 }

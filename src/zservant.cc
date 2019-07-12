@@ -7,3 +7,11 @@
 */
 
 #include <zservant.h>
+
+#include <random>
+
+void zraft::Servant::job() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(150, 300);
+}

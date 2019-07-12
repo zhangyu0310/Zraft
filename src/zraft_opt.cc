@@ -11,6 +11,7 @@
 zraft::ZraftOpt::ZraftOpt(
         const std::string &ip_list,
         uint32_t id,
+        uint32_t cluster_size,
         const std::string &local_ip,
         uint16_t local_port,
         uint16_t thread_num,
@@ -18,6 +19,7 @@ zraft::ZraftOpt::ZraftOpt(
         const std::string &log_path,
         const std::string &db_path) :
         id_(id),
+        cluster_size_(cluster_size),
         local_ip_(local_ip),
         port_(local_port),
         thread_num_(thread_num),

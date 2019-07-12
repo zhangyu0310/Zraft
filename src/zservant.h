@@ -14,7 +14,8 @@
 namespace zraft {
 
 class Servant : Zrole {
-
+public:
+    void job();
 };
 
 } // namespace zraft

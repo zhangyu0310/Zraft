@@ -12,7 +12,8 @@
 namespace zraft {
 
 class Zrole {
-
+public:
+    virtual void job() = 0;
 };
 
 } // namespace zraft

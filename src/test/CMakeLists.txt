@@ -38,3 +38,10 @@ target_link_libraries(zraft_connections_test pthread)
 target_link_libraries(zraft_connections_test bounce)
 target_link_libraries(zraft_connections_test zraft)
 target_link_libraries(zraft_connections_test bounce)
+
+add_executable(zraft_election_test
+        zraft_election_test.cpp)
+target_link_libraries(zraft_election_test pthread)
+target_link_libraries(zraft_election_test bounce)
+target_link_libraries(zraft_election_test zraft)
+target_link_libraries(zraft_election_test bounce)

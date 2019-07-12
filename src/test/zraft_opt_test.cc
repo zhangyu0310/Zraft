@@ -8,7 +8,10 @@
 
 TEST(ZraftOpt, init)
 {
-    zraft::ZraftOpt opt("127.0.0.1:9999,1.7.5.3:1,0.0.0.0:10,127.0.0.1:9281", 0);
+    zraft::ZraftOpt opt(
+            "127.0.0.1:9999,"
+            "1.7.5.3:1,0.0.0.0:10,"
+            "127.0.0.1:9281", 0, 3);
     for (auto& it : opt.ip_list_) {
         std::cout << "[----------] " << it << std::endl;
         std::cout << it.substr(0, it.rfind(':')) << std::endl;

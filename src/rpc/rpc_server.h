@@ -9,6 +9,8 @@
 #ifndef ZRAFT_RPC_SERVER_H
 #define ZRAFT_RPC_SERVER_H
 
+#define FILENAME(x) strrchr(x, '/')?strrchr(x, '/')+1:x
+
 #include <functional>
 #include <initializer_list>
 #include <unordered_map>
@@ -75,10 +77,12 @@ public:
 
     void shutdown(ConnectionID conn_id) const {
         auto it = connections_.find(conn_id);
-        if (it!= connections_.end()) {
+        if (it != connections_.end()) {
             it->second->shutdown();
         } else {
-            // TODO: Log Error.
+            logger_->error("file:{}, line:{}, function:{} "
+                           "Can't find conn_id, shutdown failed.",
+                           FILENAME(__FILE__), __LINE__, __FUNCTION__);
         }
     }
 
@@ -87,7 +91,9 @@ public:
         if (it != connections_.end()) {
             return it->second->local_addr().port();
         }
-        // TODO: Log Error.
+        logger_->error("file:{}, line:{}, function:{} "
+                       "Can't find conn_id, get connection local port failed.",
+                       FILENAME(__FILE__), __LINE__, __FUNCTION__);
         return 0;
     }
 
@@ -96,7 +102,9 @@ public:
         if (it != connections_.end()) {
             return it->second->peer_addr().port();
         }
-        // TODO: Log Error.
+        logger_->error("file:{}, line:{}, function:{} "
+                       "Can't find conn_id, get connection peer port failed.",
+                       FILENAME(__FILE__), __LINE__, __FUNCTION__);
         return 0;
     }
 
@@ -109,7 +117,7 @@ private:
     void errorCallback(const TcpServer::TcpConnectionPtr& conn);
     void connectErrorCallback(bounce::SockAddress addr, int err);
     bool jsonParse(Buffer* buffer, json* json);
-    time_t getNowTime();
+    int64_t getNowTime();
     std::string getNowTime2String();
     json makeRpcJson(
             const std::string& rpc_name,
@@ -131,6 +139,8 @@ private:
     ConnectCallback conn_cb_;
     ConnectCallback disconn_cb_;
     ErrorCallback error_cb_;
+    // logger
+    std::shared_ptr<spdlog::logger> logger_;
 };
 
 #endif //ZRAFT_RPC_SERVER_H
